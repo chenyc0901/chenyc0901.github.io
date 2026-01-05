@@ -134,6 +134,80 @@ if (canvas) {
         }
     }
 
+    // Binary Streams (Bioinformatics)
+    let binaryStreams = [];
+    class BinaryStream {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.speed = Math.random() * 1 + 0.5;
+            this.value = Math.random() > 0.5 ? '1' : '0';
+            this.fontSize = Math.random() * 10 + 10;
+            this.opacity = Math.random() * 0.5 + 0.1;
+        }
+
+        update() {
+            this.y += this.speed;
+            if (this.y > height) {
+                this.y = 0;
+                this.x = Math.random() * width;
+                this.value = Math.random() > 0.5 ? '1' : '0';
+            }
+        }
+
+        draw() {
+            ctx.font = `${this.fontSize}px monospace`;
+            ctx.fillStyle = `rgba(10, 147, 150, ${this.opacity})`;
+            ctx.fillText(this.value, this.x, this.y);
+        }
+    }
+
+    // Molecules (Molecular Biology)
+    let molecules = [];
+    class Molecule {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.2;
+            this.vy = (Math.random() - 0.5) * 0.2;
+            this.size = Math.random() * 15 + 5;
+            this.angle = Math.random() * Math.PI * 2;
+            this.spin = (Math.random() - 0.5) * 0.02;
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.angle += this.spin;
+
+            if (this.x < -50 || this.x > width + 50) this.vx *= -1;
+            if (this.y < -50 || this.y > height + 50) this.vy *= -1;
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle);
+            ctx.strokeStyle = 'rgba(238, 155, 0, 0.15)'; // Faint accent
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            // Draw hexagon
+            for (let i = 0; i < 6; i++) {
+                const angle = i * Math.PI / 3;
+                const hx = Math.cos(angle) * this.size;
+                const hy = Math.sin(angle) * this.size;
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            // Center atom
+            ctx.fillStyle = 'rgba(238, 155, 0, 0.1)';
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
     function init() {
         resize();
         window.addEventListener('resize', resize);
@@ -155,6 +229,18 @@ if (canvas) {
         nodes = [];
         for (let i = 0; i < nodeConfig.count; i++) {
             nodes.push(new Node());
+        }
+
+        // Init Binary Streams
+        binaryStreams = [];
+        for (let i = 0; i < 20; i++) {
+            binaryStreams.push(new BinaryStream());
+        }
+
+        // Init Molecules
+        molecules = [];
+        for (let i = 0; i < 10; i++) {
+            molecules.push(new Molecule());
         }
 
         animate();
@@ -217,8 +303,57 @@ if (canvas) {
         }
     }
 
+    function drawComputer() {
+        const x = width * 0.8;
+        const y = height * 0.5;
+        const size = Math.min(width, height) * 0.15; // Responsive size
+
+        ctx.strokeStyle = 'rgba(0, 95, 115, 0.6)'; // Primary color
+        ctx.lineWidth = 2;
+
+        // Monitor
+        ctx.beginPath();
+        const screenWidth = size * 1.6;
+        const screenHeight = size;
+        ctx.rect(x - screenWidth / 2, y - screenHeight / 2, screenWidth, screenHeight);
+        ctx.stroke();
+
+        // Screen Content (Code lines)
+        ctx.fillStyle = 'rgba(10, 147, 150, 0.2)'; // Secondary color
+        ctx.fillRect(x - screenWidth / 2 + 5, y - screenHeight / 2 + 5, screenWidth - 10, screenHeight - 10);
+
+        ctx.fillStyle = 'rgba(0, 95, 115, 0.4)';
+        for (let i = 0; i < 4; i++) {
+            ctx.fillRect(x - screenWidth / 2 + 15, y - screenHeight / 2 + 20 + i * 15, screenWidth * 0.6, 4);
+            ctx.fillRect(x - screenWidth / 2 + 15, y - screenHeight / 2 + 28 + i * 15, screenWidth * 0.4, 4);
+        }
+
+        // Stand
+        ctx.beginPath();
+        ctx.moveTo(x, y + screenHeight / 2);
+        ctx.lineTo(x, y + screenHeight / 2 + size * 0.3);
+        ctx.moveTo(x - size * 0.4, y + screenHeight / 2 + size * 0.3);
+        ctx.lineTo(x + size * 0.4, y + screenHeight / 2 + size * 0.3);
+        ctx.stroke();
+    }
+
     function animate() {
         ctx.clearRect(0, 0, width, height);
+
+        // Draw Computer
+        drawComputer();
+
+        // Draw Binary Streams
+        binaryStreams.forEach(b => {
+            b.update();
+            b.draw();
+        });
+
+        // Draw Molecules
+        molecules.forEach(m => {
+            m.update();
+            m.draw();
+        });
 
         // Draw DNA
         drawDNAConnections();
